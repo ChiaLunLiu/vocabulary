@@ -16,9 +16,9 @@ class MyEntry:
 		self.var = Tkinter.StringVar()
 		self.entry = Tkinter.Entry(self.frame,textvariable=self.var,font=("Purisa",12))
 		self.var.set("add new word")
-		self.entry.configure(fg="white",bg="#696969",)
-		self.entry.config(highlightthickness=0)  # no border line
+		self.entry.configure(fg="white",bg="#696969",show="1234")
 		self.entry.place(relx=0.005,rely = 0.05,relwidth=0.99,relheight=0.90)
+		#self.entry.config(bd=5)
 		# set event
 		self.frame.bind("<Enter>", partial(self.enter_event, self.frame, "#BEBEBE"))
 		self.frame.bind("<Leave>", partial(self.leave_event, self.frame, "black"))
