@@ -8,26 +8,57 @@ def color_config(widget,color,event):
 	for i in widget.winfo_children():
 		i.configure(bg=color)
 	widget.configure(bg=color)
-
+def colorchanged_event(widget,color,event):
+	widget.configure(bg=color)
+class MyLabel:
+	def __init__(self,parent):
+		self.txt = Tkinter.StringVar()
+		self.label = Tkinter.Label(parent,textvariable=self.txt,fg="black")
+	def resize(self,relx,rely,relwidth,relheight):
+		self.text.place(relx=relx,rely=rely,relwidth=relwidth,relheight=relheight)
+	def getWidget(self):
+		return self.label
+	def setText(self,str):
+		self.txt.set(str)
+class MyText:
+	def __init__(self,parent):
+		self.text = Tkinter.Text(parent)
+		self.text.configure(bg="#696969",fg="white")
+	def resize(self,relx,rely,relwidth,relheight):
+		self.text.place(relx=relx,rely=rely,relwidth=relwidth,relheight=relheight)
+	def gettext(self):
+		return self.text.get(1.0,Tkinter.END)
 class MyEntry:
 	def __init__(self,parent):
-		self.frame = Tkinter.Frame(parent)
-		self.frame.config(bg="black")
+		#self.frame = Tkinter.Frame(parent)
+		#self.frame.config(bg="black")
 		self.var = Tkinter.StringVar()
-		self.entry = Tkinter.Entry(self.frame,textvariable=self.var,font=("Purisa",12))
+		self.entry = Tkinter.Entry(parent,textvariable=self.var,font=("Purisa",12))
 		self.var.set("add new word")
-		self.entry.configure(fg="white",bg="#696969",show="1234")
-		self.entry.place(relx=0.005,rely = 0.05,relwidth=0.99,relheight=0.90)
+		self.focused = 0 # test if users have filled in words
+		self.entry.configure(fg="white",bg="#696969")
+		#self.entry.place(relx=0.005,rely = 0.05,relwidth=0.99,relheight=0.90)
 		#self.entry.config(bd=5)
 		# set event
-		self.frame.bind("<Enter>", partial(self.enter_event, self.frame, "#BEBEBE"))
-		self.frame.bind("<Leave>", partial(self.leave_event, self.frame, "black"))
+		#self.entry.bind("<ButtonPress>",partial(self.mouseleft_event))
+		self.entry.bind("<Button-1>",partial(self.mouseleft_event))
+		self.entry.bind("<KeyPress>",self.stringchanged_event)
+		self.entry.bind("<Enter>", partial(self.enter_event, self.entry, "#BEBEBE"))
+		self.entry.bind("<Leave>", partial(self.leave_event, self.entry, "#696969"))
+	def gettext(self):
+		return self.entry.get()
 	def resize(self,relx,rely,relwidth,relheight):
-		self.frame.place(relx=relx,rely=rely,relwidth=relwidth,relheight=relheight)
+		self.entry.place(relx=relx,rely=rely,relwidth=relwidth,relheight=relheight)
 	def enter_event(self,widget,color,event):
 		widget.config(bg=color)
+		widget.config(bd=5)
 	def leave_event(self,widget,color,event):
 		widget.config(bg=color)
+		widget.config(bd=2)
+	def stringchanged_event(self,event):
+		self.focused = 1
+	def mouseleft_event(self,event):
+		self.focused = 1
 class GUI:
 	def __init__(self):
 		self.wd = Wordbase('word')
@@ -39,42 +70,62 @@ class GUI:
 		self.width = self.top.winfo_screenwidth()-150  # GUI width
 		self.top.title("My vocabulary")
 		self.top.geometry('+0+0')
-		self.mainFrame = Tkinter.Frame(self.top,  height=self.height, width=self.width)
+		self.top.configure(bg="white",height=self.height, width=self.width)
+		self.mainFrame = Tkinter.Frame(self.top)
 		self.C = Tkinter.Frame(self.mainFrame,bg="white")
 		self.var = Tkinter.StringVar()
 		self.topFrame = Tkinter.Frame(self.top,bg="white")
-		self.labelNum = Tkinter.Label(self.topFrame,text="word")
-		self.entryWord = Tkinter.Entry(self.topFrame,bd=5)
-		self.labelNum.pack(side=Tkinter.LEFT)
-		self.entryWord.pack(side=Tkinter.LEFT)
+		self.total = MyLabel(self.topFrame)
+		self.entryWord = Tkinter.Entry(self.topFrame,bd=5,font = tkFont.Font(family="Helvetica", size=12))
 		self.button_add = Tkinter.Button(self.topFrame, text ="add", command = self.addEvent)
-		self.button_add.pack(side = Tkinter.LEFT)
 		self.button_search = Tkinter.Button(self.topFrame, text ="search", command = self.searchEvent)
-		self.button_search.pack(side=Tkinter.LEFT)
 		self.label = Tkinter.Label(self.top,textvariable=self.var)
-#		for r in range(3):
-#			for c in range(4):
-#				Tkinter.Label(self.C, text='R%s/C%s'%(r,c),foreground="purple",
-#					borderwidth=1 ).grid(row=r,column=c)
-		#self.initAddWordPanel()
+		# initialization
+		self.total.setText( self.wd.count() )
 		self.panel = None
+		# layout
+		self.total.getWidget().place(relx = 0.1, relwidth = 0.1,relheight=1.0)
+		self.entryWord.place(relx=0.3+0.21,relwidth=0.2,relheight=1.0)
+		self.button_add.place(relx=0.3+0.42,relwidth=0.05,relheight=1.0)
+		self.button_search.place(relx=0.3+0.48,relwidth=0.05,relheight=1.0)
+		self.topFrame.place(relwidth=1.0,relheight=0.08)
+		self.mainFrame.place(relx=0,rely=0.09,relwidth=1.0,relheight=0.91)
 		self.C.place(relwidth=1.0,relheight=1.0)
-		self.topFrame.pack()
-		self.mainFrame.pack()
-		self.label.pack()
+	#	self.label.pack()
 		self.top10()
 	def initAddWordPanel(self):
 		if self.panel != None: self.panel.destroy()
 		self.panel = Tkinter.Frame(self.mainFrame,bg="#4F4F4F")		
 		self.newword = MyEntry(self.panel)
+		self.desc = MyText(self.panel)
+		self.err = Tkinter.Label(self.panel,fg="white",bg="red")
+		self.btn = Tkinter.Button(self.panel,text="create",command=self.btnAddWordEvent,bg="#4F4F4F",fg="white",relief=Tkinter.GROOVE)
+		# event
+		self.btn.bind("<Enter>",partial(colorchanged_event,self.btn,"#696969"))
+		self.btn.bind("<Leave>",partial(colorchanged_event,self.btn,"#4F4F4F"))
+		#layout
 		self.newword.resize(relx=0.1,rely=0.1,relwidth=0.3,relheight=0.05)
+		self.err.place(relx=0.5,rely = 0.35,relwidth=0.2,relheight=0.15)
+		self.btn.place(relx=0.1,rely=0.8,relwidth=0.05,relheight=0.05)
+		self.desc.resize(relx=0.1,rely=0.3,relwidth=0.3,relheight=0.25)
 		self.panel.place(relx=0.2,rely=0,relwidth=0.8,relheight=1.0)
+	def btnAddWordEvent(self):
+		# check self.newword is not empty  , self.desc needs escape
+		str= self.newword.gettext()
+		desc = self.desc.gettext()
+		if str =="" : return
+		ret = self.wd.search(str)
+		if ret == None:
+			self.wd.getOrCreateWord(str,desc)
+		# word is already in database
+		# destroy itself to back to the main frame
+		self.panel.destroy()
+		self.panel = None
 	def clear(self):
 		self.row = 0
 		self.C.destroy()   # delete all widgets
 		self.C = Tkinter.Frame(self.mainFrame,bg="white")
 		self.C.place(relheight=1.0,relwidth=1.0)
-		self.initAddWordPanel()
 	def top10(self):
 		self.clear()
 		cur = self.wd.top10()
@@ -105,11 +156,11 @@ class GUI:
 		self.row = self.row +1
 	def addEvent(self):
 		print ("call addEvent")
-		keyword = self.entryWord.get()
-		ret = self.wd.getOrCreateWord(keyword)
-		self.addEntry(ret[0],ret[1],ret[2])
+		self.initAddWordPanel()
+#		keyword = self.entryWord.get()
+#		ret = self.wd.getOrCreateWord(keyword)
+#		self.addEntry(ret[0],ret[1],ret[2])
 	def searchEvent(self):
-		#print "called searchEvent"
 		self.clear()
 		keyword = self.entryWord.get()
 		ret = self.wd.search( keyword )
@@ -126,10 +177,10 @@ class Wordbase:
 	def createIndexTable(self):
 		self.con.execute('create table if not exists Wordbase(word,refcount integer,desc)')
 		self.dbcommit()
-	def getOrCreateWord(self,word):
+	def getOrCreateWord(self,word,desc=""):
 		cur = self.con.execute("select * from Wordbase where word='%s'" % (word)).fetchone()
 		if cur ==None:
-			cur = self.con.execute("insert into Wordbase (word,refcount,desc) values('%s',0,'')" %(word))
+			cur = self.con.execute("insert into Wordbase (word,refcount,desc) values('%s',0,'%s')" %(word,desc))
 			self.dbcommit()
 			cur = self.con.execute("select * from Wordbase where word='%s'" % (word)).fetchone()
 		return [i for i in cur]
@@ -150,6 +201,8 @@ class Wordbase:
 			t = [ j for j in i]
 			ret.append(t)
 		return ret
+	def count(self):
+		return self.con.execute("select count(*) from Wordbase").fetchone()[0]
 def main():
 	#print "hi"
 	gui = GUI()
