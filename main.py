@@ -3,6 +3,7 @@ import sys
 import ImageTk, Image
 import Tkinter
 import tkFont
+import re
 from functools import partial
 def color_config(widget,color,event):
 	for i in widget.winfo_children():
@@ -72,7 +73,12 @@ class GUI:
 		self.top.geometry('+0+0')
 		self.top.configure(bg="white",height=self.height, width=self.width)
 		self.mainFrame = Tkinter.Frame(self.top)
+		self.columnTitleFrame = Tkinter.Frame(self.top,bg="white")
+		self.ctname = Tkinter.Label(self.columnTitleFrame,bg="white",fg="black",text="name",font = tkFont.Font(family="Jokerman", size=12))
+		self.ctcount = Tkinter.Label(self.columnTitleFrame,bg="white",fg="black",text="count",font = tkFont.Font(family="Jokerman", size=12))
+		self.ctdesc = Tkinter.Label(self.columnTitleFrame,bg="white",fg="black",text="description",font = tkFont.Font(family="Jokerman", size=12))
 		self.C = Tkinter.Frame(self.mainFrame,bg="white")
+
 		self.var = Tkinter.StringVar()
 		self.topFrame = Tkinter.Frame(self.top,bg="white")
 		self.total = MyLabel(self.topFrame)
@@ -82,14 +88,21 @@ class GUI:
 		self.label = Tkinter.Label(self.top,textvariable=self.var)
 		# initialization
 		self.total.setText( self.wd.count() )
+		self.entryWord.bind("<Return>",self.searchEvent)
+		self.entryWord.focus()
 		self.panel = None
+
 		# layout
 		self.total.getWidget().place(relx = 0.1, relwidth = 0.1,relheight=1.0)
 		self.entryWord.place(relx=0.3+0.21,relwidth=0.2,relheight=1.0)
 		self.button_add.place(relx=0.3+0.42,relwidth=0.05,relheight=1.0)
 		self.button_search.place(relx=0.3+0.48,relwidth=0.05,relheight=1.0)
 		self.topFrame.place(relwidth=1.0,relheight=0.08)
-		self.mainFrame.place(relx=0,rely=0.09,relwidth=1.0,relheight=0.91)
+		self.ctname.place(relx=0,rely=0,relwidth=0.4,relheight=1)
+		self.ctcount.place(relx=0.4,rely=0,relwidth=0.2,relheight=1)
+		self.ctdesc.place(relx=0.6,rely=0,relwidth=0.4,relheight=1)
+		self.columnTitleFrame.place(rely=0.08,relwidth=1.0,relheight=0.08)
+		self.mainFrame.place(relx=0,rely=0.16,relwidth=1.0,relheight=0.84)
 		self.C.place(relwidth=1.0,relheight=1.0)
 	#	self.label.pack()
 		self.top10()
@@ -113,6 +126,7 @@ class GUI:
 		# check self.newword is not empty  , self.desc needs escape
 		str= self.newword.gettext()
 		desc = self.desc.gettext()
+		desc = re.escape(desc)
 		if str =="" : return
 		ret = self.wd.search(str)
 		if ret == None:
@@ -155,19 +169,19 @@ class GUI:
 		t.place(rely=0,relx=0.6,relheight=1.0,relwidth=0.40)
 		self.row = self.row +1
 	def addEvent(self):
-		print ("call addEvent")
 		self.initAddWordPanel()
-#		keyword = self.entryWord.get()
-#		ret = self.wd.getOrCreateWord(keyword)
-#		self.addEntry(ret[0],ret[1],ret[2])
-	def searchEvent(self):
+	def searchEvent(self,event=None):
 		self.clear()
 		keyword = self.entryWord.get()
-		ret = self.wd.search( keyword )
-		if ret != None:
-			ret[1] = ret[1]+1
-			self.wd.update(ret)
-			self.addEntry(ret[0],ret[1],ret[2])
+		if keyword == "": 
+			# gettop10
+			self.top10()
+		else:
+			ret = self.wd.search( keyword )
+			if ret != None:
+				ret[1] = ret[1]+1
+				self.wd.update(ret)
+				self.addEntry(ret[0],ret[1],ret[2])
 class Wordbase:
 	def __init__(self,dbname):
 		self.con = sqlite3.connect(dbname)
